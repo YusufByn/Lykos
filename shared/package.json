@@ -1,0 +1,13 @@
+{
+  "name": "@lykos/shared",
+  "version": "1.0.0",
+  "description": "Schémas de validation Zod partagés entre frontend et backend",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}

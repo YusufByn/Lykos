@@ -1,0 +1,17 @@
+{
+  "name": "lykos",
+  "version": "1.0.0",
+  "description": "Journal de visionnage personnel de films et séries",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend"
+  },
+  "author": "Yusuf Buyukaydin",
+  "license": "ISC"
+}
