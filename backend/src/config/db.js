@@ -20,10 +20,10 @@ export const pool = mysql.createPool({
 export async function testConnection() {
   try {
     // Requête minimale pour confirmer que le pool peut se connecter
-    await pool.query("SELECT NOW()");
-    console.log("✅ Connexion à la base de données réussie.");
+    await pool.execute("SELECT NOW()");
+    console.log("Connexion à la base de données réussie.");
   } catch (error) {
-    console.error("❌ Impossible de se connecter à la base de données :", error.message);
+    console.error("Impossible de se connecter à la base de données :", error.message);
     // On relance l'erreur pour interrompre le démarrage du serveur
     throw error;
   }

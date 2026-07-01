@@ -11,7 +11,7 @@ async function start() {
 
   // Démarre le serveur Express sur le port défini dans les variables d'environnement
   app.listen(env.port, () => {
-    console.log(`🚀 Serveur démarré sur le port ${env.port}`);
+    console.log(`Serveur démarré sur le port ${env.port}`);
   });
 }
 

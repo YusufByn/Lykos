@@ -21,3 +21,6 @@ Thumbs.db
 
 # Editors
 .idea/
+
+# Roadmap (notes internes)
+roadmap.md
