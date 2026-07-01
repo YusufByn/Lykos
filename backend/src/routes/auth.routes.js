@@ -13,7 +13,5 @@ authRouter.post("/register", register);
 // Connexion d'un utilisateur existant.
 authRouter.post("/login", login);
 
-// Route simple pour vérifier qu'un token valide donne accès à la route protégée.
-authRouter.get("/me", authMiddleware, getAuthProfile);
 
 export default authRouter;

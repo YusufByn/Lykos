@@ -7,21 +7,25 @@ import { pool } from "../config/db.js";
 // Cherche un utilisateur par email, en récupérant les champs utiles à l'authentification.
 // Renvoie undefined si aucun utilisateur ne correspond.
 export async function findUserByEmail(email) {
+
   const [users] = await pool.execute(
     "SELECT id, email, password_hash, role FROM user WHERE email = ? LIMIT 1",
     [email],
   );
 
+  // on return la premier key de users, ici le mail
   return users[0];
 }
 
 // Crée un utilisateur avec un mot de passe déjà hashé.
 // Renvoie l'utilisateur créé (id, email, role).
 export async function createUser({ email, passwordHash, role }) {
+
   const [result] = await pool.execute(
     "INSERT INTO user (email, password_hash, role) VALUES (?, ?, ?)",
     [email, passwordHash, role],
   );
 
+  // on return l'id, le mail et le role
   return { id: result.insertId, email, role };
 }

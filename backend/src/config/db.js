@@ -17,14 +17,11 @@ export const pool = mysql.createPool({
 
 // Vérifie que la base de données est joignable.
 // Lance une erreur (et stoppe le démarrage) si la connexion échoue.
-export async function testConnection() {
-  try {
-    // Requête minimale pour confirmer que le pool peut se connecter
-    await pool.execute("SELECT NOW()");
-    console.log("Connexion à la base de données réussie.");
-  } catch (error) {
-    console.error("Impossible de se connecter à la base de données :", error.message);
-    // On relance l'erreur pour interrompre le démarrage du serveur
-    throw error;
-  }
+// fonction pour tester la connexion à la db
+export async function testConnection(){
+    // rows c'est le premier tableau retourné par la requete mysql
+    const [rows] = await pool.execute('SELECT NOW() AS now');
+    // rows[0].now c'est la date et l'heure actuelle
+    console.log("connecté a la db sur mysql à l'heure : ", rows[0].now);
+    
 }
