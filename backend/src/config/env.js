@@ -3,8 +3,8 @@
 
 import dotenv from "dotenv";
 
-// Charge le fichier .env dans process.env
-dotenv.config();
+// Charge le fichier .env dans process.env sans afficher de log automatique.
+dotenv.config({ quiet: true });
 
 export const env = {
   port: process.env.PORT || 3000,

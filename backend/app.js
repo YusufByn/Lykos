@@ -3,6 +3,7 @@
 
 import express from "express";
 import cors from "cors";
+import authRouter from "./src/routes/auth.routes.js";
 
 const app = express();
 
@@ -15,7 +16,7 @@ app.use(express.json());
 app.use(cors());
 
 // --- Routes ---
-// Les routes seront branchées ici au fur et à mesure
-// Exemple : app.use("/api/auth", authRouter);
+// Routes d'authentification (inscription, connexion, test du token)
+app.use("/api/auth", authRouter);
 
 export default app;
