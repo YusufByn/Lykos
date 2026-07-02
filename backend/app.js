@@ -3,7 +3,7 @@
 
 import express from "express";
 import cors from "cors";
-import authRouter from "./src/routes/auth.routes.js";
+import routes from "./src/routes/index.js";
 
 const app = express();
 
@@ -16,7 +16,8 @@ app.use(express.json());
 app.use(cors());
 
 // --- Routes ---
-// Routes d'authentification (inscription, connexion, test du token)
-app.use("/api/auth", authRouter);
+// Toutes les routes de l'application passent par ce seul point d'entree,
+// voir src/routes/index.js pour le detail de chaque router.
+app.use("/api", routes);
 
 export default app;

@@ -2,8 +2,7 @@
 // Elles définissent les URLs puis délèguent la logique au contrôleur.
 
 import { Router } from "express";
-import { getAuthProfile, login, register } from "../controllers/auth.controller.js";
-import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { login, register } from "../controllers/auth.controller.js";
 
 const authRouter = Router();
 

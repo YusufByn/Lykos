@@ -1,0 +1,19 @@
+// Point d'entree de toutes les routes de l'application.
+// Regroupe chaque router d'entite pour ne faire qu'un seul import dans app.js.
+// Quand on ajoute une nouvelle entite (watchlist, episodes, admin...),
+// on cree son fichier de routes et on le branche ici, pas dans app.js.
+
+import { Router } from "express";
+import authRouter from "./auth.routes.js";
+import tmdbRouter from "./tmdb.routes.js";
+
+const router = Router();
+
+// routes d'authentification : /api/auth/register, /api/auth/login
+router.use("/auth", authRouter);
+
+// routes tmdb, montees a la racine pour garder /api/search/movie, /api/movie/:id...
+// (le prefixe /tmdb n'est pas utilise, les urls demandees dans la roadmap sont directes)
+router.use("/", tmdbRouter);
+
+export default router;
