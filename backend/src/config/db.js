@@ -13,6 +13,7 @@ export const pool = mysql.createPool({
   password: env.db.password,
   database: env.db.database,
   connectionLimit: 10,
+  dateStrings: ['DATE']
 });
 
 // Vérifie que la base de données est joignable.
