@@ -157,7 +157,7 @@ frontend/
 - [x] F2 — Middleware de rôle
 - [x] F6 — Réinitialisation mot de passe
 - [x] F7 — Espace admin
-- [ ] F4 — Bibliothèque (CRUD livres) — **seul reste backend**
+- [x] F4 — Bibliothèque (CRUD livres)
 
 F3 (service TMDB) et F5 (suivi épisodique) supprimées lors du pivot.
 
