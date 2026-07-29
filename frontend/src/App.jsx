@@ -1,122 +1,46 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+// Racine de l'application cote routage.
+// Declare toutes les routes de l'app ; chaque page reelle sera branchee ici
+// au fur et a mesure des fonctionnalites suivantes (F9 a F15).
 
-function App() {
-  const [count, setCount] = useState(0)
+import { Route, Routes } from "react-router-dom";
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./context/AuthContext";
 
+// Page temporaire utilisee tant que les vraies pages n'existent pas encore.
+// Sert uniquement a valider que le routeur, le contexte et Tailwind
+// fonctionnent bien ensemble (critere de validation de F8).
+function PlaceholderPage({ title }) {
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <h1 className="text-2xl font-semibold text-gray-800">{title}</h1>
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    // AuthProvider englobe toutes les routes pour que useAuth() soit
+    // disponible dans n'importe quelle page de l'application
+    <AuthProvider>
+      <Routes>
+        {/* route publique, deviendra la Landing page (F15) */}
+        <Route path="/" element={<PlaceholderPage title="Accueil (F15)" />} />
+
+        {/* route de connexion, deviendra la vraie page Login (F9) */}
+        <Route path="/login" element={<PlaceholderPage title="Connexion (F9)" />} />
+
+        {/* route protegee de demonstration, deviendra le Dashboard (F10) */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <PlaceholderPage title="Dashboard (F10)" />
+            </PrivateRoute>
+          }
+        />
+      </Routes>
+    </AuthProvider>
+  );
+}
+
+export default App;

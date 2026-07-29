@@ -1,0 +1,4 @@
+/* Point d'entree des styles de l'application. */
+/* @config permet de relier explicitement ce fichier a tailwind.config.js */
+@config "../../tailwind.config.js";
+@import "tailwindcss";

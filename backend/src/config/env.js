@@ -9,6 +9,10 @@ dotenv.config({ quiet: true });
 export const env = {
   port: process.env.PORT || 3000,
 
+  // url du frontend, utilisee pour construire le lien de reinitialisation
+  // envoye par email (voir mail.service.js)
+  frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+
   db: {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT) || 3306,
@@ -20,10 +24,6 @@ export const env = {
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  },
-
-  tmdb: {
-    accessToken: process.env.TMDB_ACCESS_TOKEN,
   },
 
   mail: {

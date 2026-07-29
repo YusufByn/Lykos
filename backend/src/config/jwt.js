@@ -7,8 +7,9 @@ import { env } from "./env.js";
 export const jwtSecret = env.jwt.secret;
 export const jwtExpiresIn = env.jwt.expiresIn;
 
-// Génère un token JWT signé à partir d'un payload (un objet et non une variable, 
-// ca peut etre plsuieurs element en un seul paramètre).
+// Génère un token JWT signé à partir d'un payload (un objet qui permet de regrouper
+// plusieurs info en un seul param, plutôt que de passer chaque
+// data separement
 // Le token expire selon la durée définie dans les variables d'environnement.
 export function signToken(payload) {
   // la method sign permet de créer le token avec 3 parametre, l'objet payload, le jwt secret et quand il expire

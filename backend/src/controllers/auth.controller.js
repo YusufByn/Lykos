@@ -2,11 +2,30 @@
 // Il orchestre l'inscription et la connexion des utilisateurs.
 
 import bcrypt from "bcrypt";
-import { loginSchema, registerSchema } from "@lykos/shared";
+import { createHash, randomBytes } from "node:crypto";
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from "@lykos/shared";
+import { env } from "../config/env.js";
 import { signToken } from "../config/jwt.js";
-import { createUser, findUserByEmail } from "../repositories/user.repository.js";
+import {
+  createPasswordReset,
+  findPasswordResetByToken,
+  markPasswordResetAsUsed,
+} from "../repositories/password_reset.repository.js";
+import { createUser, findUserByEmail, updateUserPassword } from "../repositories/user.repository.js";
+import { sendPasswordResetEmail } from "../services/mail.service.js";
 
 const BCRYPT_SALT_ROUNDS = 12;
+
+// duree de validite d'un token de reset : 1 heure, comme demande dans la roadmap
+const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
+
+// transforme le token brut en empreinte SHA-256 avant de le stocker ou de le chercher en base.
+// Pas besoin de bcrypt ici : contrairement a un mot de passe choisi par un humain,
+// le token est deja un secret aleatoire de 256 bits (voir randomBytes plus bas),
+// un hash rapide suffit a empecher qu'un vol de la base donne des tokens exploitables.
+function hashToken(token) {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 // Prépare la réponse renvoyée après inscription ou connexion
 function buildAuthResponse(user) {
@@ -37,10 +56,8 @@ export async function register(req, res) {
     });
   }
 
-  // variable mail qui est egal au mail dans validation (qui est le body de la request parsé)
-  const email = validation.data.email.toLowerCase();
-  // varaible password du body de la request (destructuration ici avec les{})
-  const { password } = validation.data;
+  // email et password qui est celui de la request
+  const { email, password } = validation.data;
 
   try {
     // On vérifie d'abord que l'email n'est pas déjà utilisé. (method dans le repoitory user)
@@ -87,10 +104,8 @@ export async function login(req, res) {
     });
   }
 
-  // on lowercase l'email qu'on recroit du body de la request
-  const email = validation.data.email.toLowerCase();
-  // password qui est celui de la request
-  const { password } = validation.data;
+  // email et password qui est celui de la request
+  const { email, password } = validation.data;
 
   try {
     
@@ -122,6 +137,120 @@ export async function login(req, res) {
     console.error("Erreur lors de la connexion :", error.message);
     return res.status(500).json({ 
       message: "Erreur serveur lors de la connexion." 
+    });
+  }
+}
+
+// Demande de reinitialisation de mot de passe : genere un token unique,
+// l'enregistre en base avec une expiration, puis envoie un email avec le lien.
+export async function forgotPassword(req, res) {
+  // validation zod : on ne verifie que l'email ici
+  const validation = forgotPasswordSchema.safeParse(req.body);
+
+  if (!validation.success) {
+    return res.status(400).json({ 
+      message: validation.error.errors[0].message 
+    });
+  }
+
+  const { email } = validation.data;
+
+  // meme reponse dans tous les cas (email trouve ou non), pour ne jamais
+  // reveler a un attaquant si un email est inscrit chez nous ou pas
+  const genericResponse = {
+    message: "Si cet email existe, un lien de réinitialisation vient de lui être envoyé.",
+  };
+
+  try {
+    const user = await findUserByEmail(email);
+
+    // si l'email n'existe pas en base, on s'arrete la mais on renvoie quand
+    // meme une reponse 200 normale (voir commentaire au dessus)
+    if (!user) {
+      return res.status(200).json(genericResponse);
+    }
+
+    // token aleatoire et impossible a deviner, transforme en chaine hexadecimale.
+    // C'est CE token (en clair) qui part dans l'email : c'est la seule fois ou il existe non hashe.
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRATION_MS);
+
+    // on enregistre uniquement l'empreinte du token en base, jamais le token en clair
+    // (comme ca une fuite de la base ne permet pas de reinitialiser un mot de passe a la place de quelqu'un)
+    const tokenHash = hashToken(token);
+    await createPasswordReset({ userId: user.id, tokenHash, expiresAt });
+
+    // lien complet envoye par email, il pointe vers la page front qui recuperera
+    // le token dans l'url (voir F9 - ResetPassword.jsx)
+    const resetLink = `${env.frontendUrl}/reset-password?token=${token}`;
+
+    await sendPasswordResetEmail(user.email, resetLink);
+
+    return res.status(200).json(genericResponse);
+  } catch (error) {
+    console.error("Erreur lors de la demande de réinitialisation :", error.message);
+
+    return res.status(500).json({ 
+      message: "Erreur serveur lors de la demande de réinitialisation." 
+    });
+  }
+}
+
+// Reinitialisation du mot de passe a partir du token recu par email.
+export async function resetPassword(req, res) {
+  const validation = resetPasswordSchema.safeParse(req.body);
+
+  if (!validation.success) {
+    return res.status(400).json({ 
+      message: validation.error.errors[0].message 
+    });
+  }
+
+  const { token, password } = validation.data;
+
+  try {
+    // on hash le token recu pour le comparer a l'empreinte stockee en base
+    // (on ne stocke jamais le token en clair, voir forgotPassword)
+    const tokenHash = hashToken(token);
+    const passwordReset = await findPasswordResetByToken(tokenHash);
+
+    // token inconnu en base -> on refuse sans donner plus de details
+    if (!passwordReset) {
+      return res.status(400).json({ 
+        message: "Ce lien de réinitialisation est invalide." 
+      });
+    }
+
+    // used_at deja rempli -> le token a deja servi une fois, usage unique impose
+    if (passwordReset.used_at) {
+      return res.status(400).json({ 
+        message: "Ce lien de réinitialisation a déjà été utilisé." 
+      });
+    }
+
+    // on compare la date d'expiration a maintenant pour verifier que le token est encore valide
+    if (new Date(passwordReset.expires_at) < new Date()) {
+      return res.status(400).json({ 
+        message: "Ce lien de réinitialisation a expiré." 
+      });
+    }
+
+    // on hash le nouveau mot de passe avant de l'enregistrer, exactement comme a l'inscription
+    const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+
+    await updateUserPassword(passwordReset.user_id, passwordHash);
+
+    // on marque le token comme utilise pour qu'il ne puisse plus jamais reservir
+    await markPasswordResetAsUsed(passwordReset.id);
+
+    return res.status(200).json({ 
+      message: "Votre mot de passe a été réinitialisé avec succès." 
+    });
+  } catch (error) {
+    console.error("Erreur lors de la réinitialisation du mot de passe :", error.message);
+
+    return res.status(500).json({ 
+      message: "Erreur serveur lors de la réinitialisation du mot de passe." 
     });
   }
 }
