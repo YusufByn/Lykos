@@ -1,15 +1,17 @@
 // Racine de l'application côté routage.
 // Déclare toutes les routes de l'app ; chaque page réelle sera branchée ici
-// au fur et à mesure des fonctionnalités suivantes (F9 à F15).
+// au fur et à mesure des fonctionnalités suivantes (F11 à F15).
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 import ForgotPassword from "./pages/ForgotPassword";
+import Library from "./pages/Library";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
+import Wishlist from "./pages/Wishlist";
 
 // Page temporaire utilisée tant que les vraies pages n'existent pas encore.
 // Sert uniquement à valider que le routeur, le contexte et Tailwind
@@ -54,8 +56,8 @@ function App() {
             </PrivateRoute>
           }
         >
-          <Route path="/bibliotheque" element={<PlaceholderPage title="Ma bibliothèque (F10)" />} />
-          <Route path="/wishlist" element={<PlaceholderPage title="Wishlist (F10)" />} />
+          <Route path="/bibliotheque" element={<Library />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/livres/nouveau" element={<PlaceholderPage title="Nouveau livre (F11)" />} />
           <Route path="/livres/:id" element={<PlaceholderPage title="Détail du livre (F12)" />} />
           <Route

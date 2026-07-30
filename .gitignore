@@ -22,8 +22,5 @@ Thumbs.db
 # Editors
 .idea/
 
-# Roadmap (notes internes)
-roadmap.md
-
 # Schema SQL (notes internes)
 backend/db/schema.sql
