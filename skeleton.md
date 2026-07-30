@@ -122,6 +122,7 @@ frontend/
 └── src/
     ├── main.jsx                      # généré par Vite
     ├── App.jsx                       # F8 — React Router, toutes les routes déclarées
+    ├── constants.js                  # F8 — clés de localStorage (token, utilisateur)
     ├── styles/
     │   └── index.css                 # F8 — directives Tailwind
     ├── context/
@@ -130,6 +131,8 @@ frontend/
     │   └── api.js                    # F8 — wrapper fetch (token JWT, JSON, erreurs)
     ├── components/
     │   ├── PrivateRoute.jsx          # F8 — protège les routes connectées
+    │   ├── AdminRoute.jsx            # F8 — protège en plus par rôle admin
+    │   ├── Layout.jsx                # F8 — sidebar commune + <Outlet />
     │   ├── Sidebar.jsx               # F10 — les 6 vues (+ Admin)
     │   ├── BookCard.jsx              # F10 — carte livre
     │   ├── StatusSelector.jsx        # F10 — les 4 statuts de lecture
@@ -162,7 +165,7 @@ frontend/
 F3 (service TMDB) et F5 (suivi épisodique) supprimées lors du pivot.
 
 ### Frontend
-- [ ] F8 — Setup (Tailwind, router, AuthContext, api.js, PrivateRoute)
+- [x] F8 — Setup (Tailwind, router, AuthContext, api.js, PrivateRoute)
 - [ ] F9 — Pages auth (Login, Register, Forgot, Reset)
 - [ ] F10 — Ma bibliothèque (6 vues)
 - [ ] F11 — Formulaire livre (création et édition)

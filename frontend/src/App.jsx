@@ -1,14 +1,15 @@
-// Racine de l'application cote routage.
-// Declare toutes les routes de l'app ; chaque page reelle sera branchee ici
-// au fur et a mesure des fonctionnalites suivantes (F9 a F15).
-
-import { Route, Routes } from "react-router-dom";
+// Racine de l'application côté routage.
+// Déclare toutes les routes de l'app ; chaque page réelle sera branchée ici
+// au fur et à mesure des fonctionnalités suivantes (F9 à F15).
+import { Navigate, Route, Routes } from "react-router-dom";
+import AdminRoute from "./components/AdminRoute";
+import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
 
-// Page temporaire utilisee tant que les vraies pages n'existent pas encore.
-// Sert uniquement a valider que le routeur, le contexte et Tailwind
-// fonctionnent bien ensemble (critere de validation de F8).
+// Page temporaire utilisée tant que les vraies pages n'existent pas encore.
+// Sert uniquement à valider que le routeur, le contexte et Tailwind
+// fonctionnent bien ensemble (critère de validation de F8).
 function PlaceholderPage({ title }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white">
@@ -23,21 +24,59 @@ function App() {
     // disponible dans n'importe quelle page de l'application
     <AuthProvider>
       <Routes>
-        {/* route publique, deviendra la Landing page (F15) */}
+        {/* routes publiques, accessibles sans connexion */}
         <Route path="/" element={<PlaceholderPage title="Accueil (F15)" />} />
-
-        {/* route de connexion, deviendra la vraie page Login (F9) */}
         <Route path="/login" element={<PlaceholderPage title="Connexion (F9)" />} />
-
-        {/* route protegee de demonstration, deviendra le Dashboard (F10) */}
+        <Route path="/register" element={<PlaceholderPage title="Inscription (F9)" />} />
         <Route
-          path="/dashboard"
+          path="/forgot-password"
+          element={<PlaceholderPage title="Mot de passe oublié (F9)" />}
+        />
+        <Route
+          path="/reset-password/:token"
+          element={<PlaceholderPage title="Réinitialisation du mot de passe (F9)" />}
+        />
+
+        {/* /dashboard n'existe plus depuis le pivot vers le suivi de lecture.
+            La redirection est publique et non imbriquée dans PrivateRoute :
+            l'URL est réécrite d'abord, PrivateRoute protège ensuite la
+            nouvelle route. Sinon un visiteur non connecté serait envoyé vers
+            /login et la redirection ne serait jamais appliquée. */}
+        <Route path="/dashboard" element={<Navigate to="/bibliotheque" replace />} />
+
+        {/* routes connectées : PrivateRoute vérifie la connexion, Layout
+            affiche ensuite la sidebar commune et <Outlet /> injecte la page */}
+        <Route
           element={
             <PrivateRoute>
-              <PlaceholderPage title="Dashboard (F10)" />
+              <Layout />
             </PrivateRoute>
           }
-        />
+        >
+          <Route path="/bibliotheque" element={<PlaceholderPage title="Ma bibliothèque (F10)" />} />
+          <Route path="/wishlist" element={<PlaceholderPage title="Wishlist (F10)" />} />
+          <Route path="/livres/nouveau" element={<PlaceholderPage title="Nouveau livre (F11)" />} />
+          <Route path="/livres/:id" element={<PlaceholderPage title="Détail du livre (F12)" />} />
+          <Route
+            path="/livres/:id/modifier"
+            element={<PlaceholderPage title="Modifier le livre (F11)" />}
+          />
+        </Route>
+
+        {/* route admin : AdminRoute vérifie en plus le rôle avant d'afficher
+            le même Layout que les autres écrans connectés */}
+        <Route
+          element={
+            <AdminRoute>
+              <Layout />
+            </AdminRoute>
+          }
+        >
+          <Route path="/admin" element={<PlaceholderPage title="Administration (F14)" />} />
+        </Route>
+
+        {/* route de repli pour toute URL qui ne correspond à rien ci-dessus */}
+        <Route path="*" element={<PlaceholderPage title="Page introuvable" />} />
       </Routes>
     </AuthProvider>
   );

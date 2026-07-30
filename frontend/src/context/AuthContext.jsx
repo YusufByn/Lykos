@@ -3,27 +3,47 @@
 // dans l'application sans avoir a les faire descendre par props.
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from "../constants";
 
 const AuthContext = createContext(null);
-
-// cle utilisee pour garder le token dans le localStorage entre deux visites
-const TOKEN_STORAGE_KEY = "lykos_token";
 
 export function AuthProvider({ children }) {
 
   // on relit le token dans le localStorage des le premier rendu,
   // comme ca l'utilisateur reste connecte apres un rafraichissement de page
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY));
-  const [user, setUser] = useState(null);
 
-  // a chaque fois que le token change, on le sauvegarde ou on le supprime
+  // même logique pour l'utilisateur : sans ça, isAuthenticated resterait vrai
+  // (le token est présent) alors que user vaudrait null après un rafraîchissement,
+  // et la sidebar perdrait l'entrée Administration
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem(USER_STORAGE_KEY);
+
+    // une valeur corrompue dans le localStorage ne doit pas empêcher
+    // l'application de démarrer : on retombe sur null dans ce cas
+    try {
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // le token et l'utilisateur sont traités ici l'un après l'autre, chacun
+  // selon sa propre valeur : ce n'est pas une synchronisation entre les deux
+  // clés, juste deux écritures indépendantes regroupées dans le même effet
   useEffect(() => {
     if (token) {
       localStorage.setItem(TOKEN_STORAGE_KEY, token);
     } else {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
     }
-  }, [token]);
+
+    if (user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    }
+  }, [token, user]);
 
   // appelee apres un login ou un register reussi (voir services/api.js)
   function login(newToken, newUser) {
