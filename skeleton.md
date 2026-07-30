@@ -133,6 +133,8 @@ frontend/
     │   ├── PrivateRoute.jsx          # F8 — protège les routes connectées
     │   ├── AdminRoute.jsx            # F8 — protège en plus par rôle admin
     │   ├── Layout.jsx                # F8 — sidebar commune + <Outlet />
+    │   ├── AuthCard.jsx              # F9 — carte centrée partagée par les 4 pages auth
+    │   ├── FormField.jsx             # F9 — label + input + message d'erreur
     │   ├── Sidebar.jsx               # F10 — les 6 vues (+ Admin)
     │   ├── BookCard.jsx              # F10 — carte livre
     │   ├── StatusSelector.jsx        # F10 — les 4 statuts de lecture
@@ -166,7 +168,7 @@ F3 (service TMDB) et F5 (suivi épisodique) supprimées lors du pivot.
 
 ### Frontend
 - [x] F8 — Setup (Tailwind, router, AuthContext, api.js, PrivateRoute)
-- [ ] F9 — Pages auth (Login, Register, Forgot, Reset)
+- [x] F9 — Pages auth (Login, Register, Forgot, Reset)
 - [ ] F10 — Ma bibliothèque (6 vues)
 - [ ] F11 — Formulaire livre (création et édition)
 - [ ] F12 — Détail livre

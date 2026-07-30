@@ -6,6 +6,10 @@ import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
+import ForgotPassword from "./pages/ForgotPassword";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
 
 // Page temporaire utilisée tant que les vraies pages n'existent pas encore.
 // Sert uniquement à valider que le routeur, le contexte et Tailwind
@@ -26,16 +30,13 @@ function App() {
       <Routes>
         {/* routes publiques, accessibles sans connexion */}
         <Route path="/" element={<PlaceholderPage title="Accueil (F15)" />} />
-        <Route path="/login" element={<PlaceholderPage title="Connexion (F9)" />} />
-        <Route path="/register" element={<PlaceholderPage title="Inscription (F9)" />} />
-        <Route
-          path="/forgot-password"
-          element={<PlaceholderPage title="Mot de passe oublié (F9)" />}
-        />
-        <Route
-          path="/reset-password/:token"
-          element={<PlaceholderPage title="Réinitialisation du mot de passe (F9)" />}
-        />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* le lien envoyé par mail.service.js met le token en query string
+            (?token=...), pas en paramètre de chemin : la page lit le token
+            avec useSearchParams, voir ResetPassword.jsx */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* /dashboard n'existe plus depuis le pivot vers le suivi de lecture.
             La redirection est publique et non imbriquée dans PrivateRoute :
