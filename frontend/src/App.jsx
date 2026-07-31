@@ -1,11 +1,13 @@
 // Racine de l'application côté routage.
 // Déclare toutes les routes de l'app ; chaque page réelle sera branchée ici
-// au fur et à mesure des fonctionnalités suivantes (F11 à F15).
+// au fur et à mesure des fonctionnalités suivantes (F14 à F15).
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
+import BookDetail from "./pages/BookDetail";
+import BookForm from "./pages/BookForm";
 import ForgotPassword from "./pages/ForgotPassword";
 import Library from "./pages/Library";
 import Login from "./pages/Login";
@@ -58,12 +60,9 @@ function App() {
         >
           <Route path="/bibliotheque" element={<Library />} />
           <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/livres/nouveau" element={<PlaceholderPage title="Nouveau livre (F11)" />} />
-          <Route path="/livres/:id" element={<PlaceholderPage title="Détail du livre (F12)" />} />
-          <Route
-            path="/livres/:id/modifier"
-            element={<PlaceholderPage title="Modifier le livre (F11)" />}
-          />
+          <Route path="/livres/nouveau" element={<BookForm />} />
+          <Route path="/livres/:id" element={<BookDetail />} />
+          <Route path="/livres/:id/modifier" element={<BookForm />} />
         </Route>
 
         {/* route admin : AdminRoute vérifie en plus le rôle avant d'afficher

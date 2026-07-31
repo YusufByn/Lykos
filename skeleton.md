@@ -128,7 +128,8 @@ frontend/
 └── src/
     ├── main.jsx                      # généré par Vite
     ├── App.jsx                       # F8 — React Router, toutes les routes déclarées
-    ├── constants.js                  # F8 — clés de localStorage (token, utilisateur)
+    ├── constants.js                  # F8 — clés de localStorage et libellés
+    │                                 #      d'interface partagés
     ├── styles/
     │   └── index.css                 # F8 — directives Tailwind
     ├── context/
@@ -186,18 +187,18 @@ F3 (service TMDB) et F5 (suivi épisodique) supprimées lors du pivot.
 - [x] F8 — Setup (Tailwind, router, AuthContext, api.js, PrivateRoute, AdminRoute)
 - [x] F9 — Pages auth (Login, Register, Forgot, Reset) — code fait, recette
       navigateur non faite
-- [ ] F10 — Bibliothèque et Wishlist — Library, Wishlist, BookCard,
-      StatusSelector faits ; Sidebar.jsx reste à écrire. Recette navigateur non
-      faite
-- [ ] F11 — Formulaire livre (création et édition)
-- [ ] F12 — Détail livre
+- [x] F10 — Bibliothèque et Wishlist — Library, Wishlist, BookCard,
+      StatusSelector, Sidebar faits. Recette navigateur non faite
+- [x] F11 — Formulaire livre (création et édition) — BookForm, Toast,
+      FormField étendu (as/options/hint/disabled). Recette navigateur non faite
+- [x] F12 — Détail livre — BookDetail fait. Recette navigateur non faite
 - [ ] F14 — Dashboard admin
 - [ ] F15 — Landing page
 
 F13 (détail série) supprimée lors du pivot.
 
 ### Reste à faire hors fonctionnalités
-- [ ] Recette navigateur de F9 et F10 (aucun rendu vérifié à ce jour)
+- [ ] Recette navigateur de F9 à F12 (aucun rendu vérifié à ce jour)
 - [ ] Tests unitaires : book.repository.js et la résolution auteur/saga du
       controller (Vitest, pas de configuration nécessaire avec les modules ES)
 - [ ] Relecture ligne par ligne et nettoyage des commentaires, avant les slides

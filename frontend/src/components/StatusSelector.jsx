@@ -4,21 +4,13 @@
 // cette collection (voir skill Lykos, section Navigation).
 
 import { READING_STATUSES } from "@lykos/shared";
-
-// les libellés sont un choix d'interface, le backend ne connaît que les
-// valeurs techniques de READING_STATUSES (to_read, reading, read, abandoned)
-const STATUS_LABELS = {
-  to_read: "À lire",
-  reading: "En cours",
-  read: "Lu",
-  abandoned: "Abandonné",
-};
+import { READING_STATUS_LABELS } from "../constants";
 
 // "all" n'est pas un statut de la base : c'est l'absence de filtre côté front,
 // traduite par l'absence du paramètre "status" dans l'appel à l'API
 const OPTIONS = [
   { value: "all", label: "Tous" },
-  ...READING_STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
+  ...READING_STATUSES.map((status) => ({ value: status, label: READING_STATUS_LABELS[status] })),
 ];
 
 export default function StatusSelector({ value, onChange }) {
