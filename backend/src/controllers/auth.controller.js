@@ -184,7 +184,21 @@ export async function forgotPassword(req, res) {
     // le token dans l'url (voir F9 - ResetPassword.jsx)
     const resetLink = `${env.frontendUrl}/reset-password?token=${token}`;
 
-    await sendPasswordResetEmail(user.email, resetLink);
+    // l'envoi d'email est isole dans son propre try/catch : si nodemailer echoue
+    // (SMTP en panne, timeout, quota depasse...), ca ne doit jamais changer le
+    // statut ni le corps de la reponse HTTP deja decides plus haut. Sinon on
+    // recree exactement la faille que genericResponse est censee boucher : un
+    // email inconnu renverrait toujours 200, un email inscrit renverrait 500
+    // des que l'envoi echoue, et cette difference de statut devient un oracle
+    // qui permet a un attaquant de deviner quels emails sont enregistres chez
+    // nous sans meme avoir besoin de lire le corps de la reponse. Le token est
+    // deja cree en base a ce stade (voir createPasswordReset plus haut) : seul
+    // l'email peut echouer, pas la protection anti-enumeration.
+    try {
+      await sendPasswordResetEmail(user.email, resetLink);
+    } catch (mailError) {
+      console.error("Erreur lors de l'envoi de l'email de réinitialisation :", mailError.message);
+    }
 
     return res.status(200).json(genericResponse);
   } catch (error) {
