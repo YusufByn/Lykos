@@ -22,5 +22,4 @@ Thumbs.db
 # Editors
 .idea/
 
-# Schema SQL (notes internes)
-backend/db/schema.sql
+

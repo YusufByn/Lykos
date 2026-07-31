@@ -43,6 +43,37 @@ const BLANK_FORM = {
   finished_reading_at: "",
 };
 
+// Champs optionnels effacables en edition : exactement ceux que
+// updateBookSchema declare .nullable() (voir book.schema.js). Liste nommee
+// plutot que regle disseminee dans des if : on peut la comparer d'un coup
+// d'oeil au schema partage, et un champ ajoute demain se voit tout de suite.
+// Trois listes et non une seule, parce que la valeur envoyee quand le champ
+// est rempli ne se construit pas pareil : chaine nettoyee au trim, nombre
+// converti, ou chaine de date laissee telle quelle.
+//
+// Deux champs optionnels n'y figurent volontairement pas :
+// - series_title, qui n'est pas .nullable() et garde son mecanisme de chaine
+//   vide comme signal de detachement de saga (voir buildPayload) ;
+// - volume_number, effacable lui aussi mais conditionne a series_title, donc
+//   traite a part juste apres lui (voir buildPayload).
+const ERASABLE_TEXT_FIELDS = [
+  "author_first_name",
+  "publisher",
+  "isbn",
+  "cover_url",
+  "summary",
+  "comment",
+];
+
+const ERASABLE_NUMBER_FIELDS = ["publication_year", "page_count", "rating"];
+
+const ERASABLE_DATE_FIELDS = [
+  "wishlisted_at",
+  "acquired_at",
+  "started_reading_at",
+  "finished_reading_at",
+];
+
 // date du jour au format attendu par le schema ("YYYY-MM-DD"), calculee a
 // partir des getters locaux de Date (getFullYear/getMonth/getDate) et non de
 // toISOString() : toISOString() convertit en UTC, ce qui peut faire basculer
@@ -217,81 +248,84 @@ export default function BookForm() {
   }
 
   // construit le corps envoye a l'API a partir du formulaire (chaines) en
-  // convertissant chaque champ vers ce qu'attend le schema Zod : un champ
-  // optionnel laisse vide est omis (cle absente), jamais envoye en chaine
-  // vide ni en null. Voir le detail des cas particuliers ci-dessous.
+  // convertissant chaque champ vers ce qu'attend le schema Zod.
+  // Le point a retenir : un champ optionnel vide n'est pas traite pareil
+  // selon le mode.
+  // - En creation, il est omis du corps : il n'y a rien a effacer, et
+  //   createBookSchema n'accepte pas null.
+  // - En edition, il part a null : dans un PATCH, une cle absente signifie
+  //   "ne pas modifier" et non "vider", donc sans null il serait impossible
+  //   d'effacer une valeur deja enregistree (voir updateBookSchema).
   function buildPayload() {
+    // champs jamais vides : title et author_last_name sont verifies avant
+    // l'appel (voir handleSubmit), reading_status a toujours une valeur
+    // selectionnee dans le <select>
     const payload = {
       title: form.title.trim(),
       author_last_name: form.author_last_name.trim(),
       reading_status: form.reading_status,
     };
 
-    // prenom de l'auteur : optionnel, mais le schema refuse une chaine vide
-    // si la cle est presente (min 1 caractere) -> on omet plutot qu'envoyer ""
-    if (form.author_first_name.trim()) {
-      payload.author_first_name = form.author_first_name.trim();
+    // regle unique, appliquee APRES trim : un champ qui ne contient que des
+    // espaces est considere comme vide, il part donc a null en edition et
+    // jamais en "   ". Aucun de ces champs ne part en chaine vide.
+    for (const field of ERASABLE_TEXT_FIELDS) {
+      const value = form[field].trim();
+
+      if (value) {
+        payload[field] = value;
+      } else if (isEditMode) {
+        payload[field] = null;
+      }
     }
 
-    // saga : en creation, une chaine vide est refusee par le schema (min 1
-    // caractere) -> on omet la cle si elle est vide. En edition au contraire,
-    // une chaine vide est le signal attendu par le backend pour detacher le
-    // livre de sa saga (voir book.schema.js, commentaire sur series_title
-    // dans updateBookSchema) -> on l'envoie donc toujours, meme vide.
+    // meme regle pour les nombres. La chaine vide n'a jamais ete valide ici :
+    // z.number() refuse toute chaine, meme vide -> soit un vrai nombre, soit
+    // null en edition, soit rien du tout en creation.
+    for (const field of ERASABLE_NUMBER_FIELDS) {
+      if (form[field] !== "") {
+        payload[field] = Number(form[field]);
+      } else if (isEditMode) {
+        payload[field] = null;
+      }
+    }
+
+    // meme regle pour les dates. La valeur d'un <input type="date"> est deja
+    // au format "YYYY-MM-DD" attendu par z.string().date(), on la transmet
+    // telle quelle sans jamais la faire passer par new Date().
+    for (const field of ERASABLE_DATE_FIELDS) {
+      if (form[field] !== "") {
+        payload[field] = form[field];
+      } else if (isEditMode) {
+        payload[field] = null;
+      }
+    }
+
+    // EXCEPTION a la regle ci-dessus, le seul champ optionnel qui n'y obeit
+    // pas : series_title n'est pas .nullable() dans updateBookSchema. C'est la
+    // chaine vide, et non null, qui sert de signal de detachement de saga,
+    // interprete par resolveSeriesId() dans book.controller.js (teste et
+    // valide en F4). On envoie donc "" en edition, et on omet la cle en
+    // creation ou createBookSchema la refuserait (.min(1)).
     if (isEditMode) {
       payload.series_title = form.series_title.trim();
     } else if (form.series_title.trim()) {
       payload.series_title = form.series_title.trim();
     }
 
-    // champs texte sans longueur minimale cote schema : une chaine vide
-    // serait techniquement acceptee, mais on omet quand meme la cle pour que
-    // le backend stocke NULL plutot qu'une chaine vide (coherent avec ce que
-    // l'API renvoie deja pour un livre sans ces informations, voir la recette)
-    if (form.publisher.trim()) payload.publisher = form.publisher.trim();
-    if (form.isbn.trim()) payload.isbn = form.isbn.trim();
-    if (form.cover_url.trim()) payload.cover_url = form.cover_url.trim();
-    if (form.summary.trim()) payload.summary = form.summary.trim();
-    if (form.comment.trim()) payload.comment = form.comment.trim();
-
-    // champs numeriques : le schema attend un vrai nombre ou rien du tout,
-    // jamais une chaine meme vide -> on ne convertit que si le champ est rempli
-    if (form.publication_year !== "") payload.publication_year = Number(form.publication_year);
-    if (form.page_count !== "") payload.page_count = Number(form.page_count);
-    if (form.rating !== "") payload.rating = Number(form.rating);
-
     // le numero de tome n'a de sens que rattache a une saga : le champ est
-    // desactive tant qu'aucune saga n'est saisie (voir le JSX plus bas). Ce
-    // garde-fou omet volume_number du payload des que series_title est vide
-    // ou absent, ce qui empeche d'ENVOYER un tome sans saga dans CETTE
-    // soumission. Il ne peut en revanche pas EFFACER un volume_number deja
-    // enregistre en base lors d'une modification precedente : en PATCH, une
-    // cle absente du corps signifie "ne pas modifier", pas "effacer". Si un
-    // livre arrive en edition avec une saga et un tome, et que l'utilisateur
-    // detache la saga, series_id repart bien a NULL (series_title: "" est
-    // envoye), mais volume_number, omis du payload, reste inchange en base :
-    // le tome orphelin que ce garde-fou cherche a eviter se recree quand
-    // meme, par un autre chemin que celui qu'il bloque. Cause racine, la
-    // meme que pour les 4 dates plus bas : updateBookSchema n'a pas de
-    // .nullable() sur volume_number (ni sur rating, publication_year,
-    // page_count) : aucune valeur JSON valide n'existe pour effacer
-    // explicitement un de ces champs une fois rempli, seulement pour le
-    // remplacer par une autre valeur valide.
+    // desactive tant qu'aucune saga n'est saisie (voir le JSX plus bas), et on
+    // ne l'envoie que si series_title porte une vraie valeur. En edition, tout
+    // autre cas part explicitement a null : si l'utilisateur detache le livre
+    // de sa saga, le tome est efface en base au lieu d'y rester orphelin.
+    // C'est ce que .nullable() sur volume_number a debloque : auparavant la
+    // cle etait seulement omise, ce qui signifiait "ne pas modifier" et
+    // laissait le numero en place malgre le detachement de la saga.
     if (form.volume_number !== "" && payload.series_title) {
       payload.volume_number = Number(form.volume_number);
+    } else if (isEditMode) {
+      payload.volume_number = null;
     }
-
-    // les 4 dates : un champ vide est omis (undefined), jamais envoye en
-    // chaine vide ni en null. z.string().date().optional() n'accepte que le
-    // format "YYYY-MM-DD" ou rien du tout (pas de .nullable() sur ces 4
-    // champs dans le schema partage) : envoyer null ferait echouer la
-    // validation des l'appel a safeParse, avant meme d'atteindre le backend.
-    // Consequence assumee : une date deja renseignee ne peut pas etre
-    // effacee depuis ce formulaire, seulement remplacee par une autre date.
-    if (form.wishlisted_at !== "") payload.wishlisted_at = form.wishlisted_at;
-    if (form.acquired_at !== "") payload.acquired_at = form.acquired_at;
-    if (form.started_reading_at !== "") payload.started_reading_at = form.started_reading_at;
-    if (form.finished_reading_at !== "") payload.finished_reading_at = form.finished_reading_at;
 
     return payload;
   }
@@ -315,15 +349,22 @@ export default function BookForm() {
       manualErrors.author_last_name = ["Le nom de l'auteur est obligatoire."];
     }
 
-    // uniquement en creation : sans acquired_at NI wishlisted_at, le livre
-    // n'appartient a aucune des deux collections (la bibliotheque filtre sur
-    // acquired_at IS NOT NULL, la wishlist sur wishlisted_at IS NOT NULL AND
-    // acquired_at IS NULL) alors que le modele de donnees l'autorise tres
-    // bien. Le livre existerait en base sans jamais etre visible nulle part
-    // dans l'interface : c'est le trou que bouchent les deux boutons plus haut.
-    if (!isEditMode && !form.acquired_at && !form.wishlisted_at) {
+    // contrainte valable dans les deux sens, creation comme edition : sans
+    // acquired_at NI wishlisted_at, le livre n'appartient a aucune des deux
+    // collections (la bibliotheque filtre sur acquired_at IS NOT NULL, la
+    // wishlist sur wishlisted_at IS NOT NULL AND acquired_at IS NULL). Il
+    // existerait en base sans jamais etre atteignable dans l'interface.
+    // A la creation, le risque est de ne renseigner ni l'une ni l'autre.
+    // En edition, le risque est nouveau : depuis que ces dates sont
+    // effacables (.nullable() dans updateBookSchema), vider les deux ferait
+    // disparaitre de l'ecran un livre qui existait, sans aucun avertissement.
+    // Un livre doit toujours appartenir a une collection pour rester
+    // atteignable, qu'on soit en train de le creer ou de le modifier.
+    if (!form.acquired_at && !form.wishlisted_at) {
       manualErrors.acquisitionIntent = [
-        "Indique si tu possèdes ce livre ou si tu le veux, ou renseigne une date plus bas.",
+        isEditMode
+          ? "Garde au moins une des deux dates, acquisition ou wishlist : sans elles, ce livre n'apparaîtrait plus dans aucune collection."
+          : "Indique si tu possèdes ce livre ou si tu le veux, ou renseigne une des deux dates (acquisition ou wishlist).",
       ];
     }
 
@@ -455,10 +496,6 @@ export default function BookForm() {
               <p className="mt-2 text-xs text-[#434655]">
                 Pré-remplit la date correspondante plus bas ; tu peux la modifier ou la compléter ensuite.
               </p>
-
-              {errors.acquisitionIntent && (
-                <p className="mt-2 text-sm text-red-600">{errors.acquisitionIntent[0]}</p>
-              )}
             </div>
           )}
 
@@ -646,6 +683,16 @@ export default function BookForm() {
             onChange={handleChange}
             error={errors.finished_reading_at?.[0]}
           />
+
+          {/* erreur de niveau formulaire, affichee dans les deux modes juste
+              au-dessus du bouton : elle ne porte pas sur un champ precis mais
+              sur la combinaison des deux dates, et sa cause comme sa
+              correction different selon qu'on cree ou qu'on modifie */}
+          {errors.acquisitionIntent && (
+            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+              {errors.acquisitionIntent[0]}
+            </p>
+          )}
 
           <div className="mt-6 flex items-center gap-4">
             <button

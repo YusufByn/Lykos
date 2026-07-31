@@ -52,31 +52,54 @@ export const createBookSchema = z.object({
 // tous les champs sont optionnels ici : un PATCH ne modifie que ce qui est
 // envoye. Le .refine tout en bas interdit quand meme un body totalement vide,
 // qui n'aurait aucun sens (rien a modifier).
+//
+// Divergence assumee avec createBookSchema, la deuxieme apres series_title :
+// ici tout champ optionnel accepte null, alors qu'aucun ne l'accepte a la
+// creation. A la creation, un champ non renseigne est simplement absent du
+// corps : l'omission suffit a dire "pas de valeur", et autoriser null en plus
+// n'ajouterait qu'un second moyen d'exprimer exactement la meme chose.
+// En modification, l'omission a deja un autre sens : "ne pas toucher a ce
+// champ". Sans null, il devenait donc impossible d'effacer une valeur deja
+// enregistree : la chaine vide est refusee par .date() comme par les types
+// numeriques, et omettre la cle veut dire "ne pas modifier". null est la seule
+// valeur JSON qui exprime "vide ce champ", d'ou .nullable() ici uniquement.
+// Cela donne une regle unique cote front (voir buildPayload dans BookForm.jsx) :
+// en edition, un champ optionnel vide part a null. Et une seule representation
+// de l'absence en base, NULL et jamais "" : c'est deja le sens des 4 dates, ou
+// une valeur nulle dit que l'evenement n'a pas eu lieu.
+//
+// Quatre champs echappent volontairement a .nullable() :
+// - title, author_last_name et reading_status : un livre ne peut pas les
+//   perdre, les vider n'aurait aucun sens (ils restent en .min(1) ou en enum) ;
+// - series_title, qui garde son mecanisme d'origine : la chaine vide y est
+//   deja le signal de detachement de saga, interprete par resolveSeriesId()
+//   dans book.controller.js, teste et valide en F4. Ajouter null lui donnerait
+//   deux facons d'exprimer la meme intention, sans rien resoudre de plus.
 export const updateBookSchema = z
   .object({
     title: z.string().trim().min(1).optional(),
 
-    author_first_name: z.string().trim().min(1).optional(),
+    author_first_name: z.string().trim().min(1).nullable().optional(),
     author_last_name: z.string().trim().min(1).optional(),
     // chaine vide autorisee ici : c'est le signal pour retirer le livre de sa saga
     series_title: z.string().trim().optional(),
-    volume_number: z.number().int().positive().optional(),
+    volume_number: z.number().int().positive().nullable().optional(),
 
-    publication_year: z.number().int().optional(),
-    publisher: z.string().trim().optional(),
-    page_count: z.number().int().positive().optional(),
-    isbn: z.string().trim().optional(),
-    cover_url: z.string().trim().optional(),
-    summary: z.string().optional(),
+    publication_year: z.number().int().nullable().optional(),
+    publisher: z.string().trim().nullable().optional(),
+    page_count: z.number().int().positive().nullable().optional(),
+    isbn: z.string().trim().nullable().optional(),
+    cover_url: z.string().trim().nullable().optional(),
+    summary: z.string().nullable().optional(),
 
     reading_status: z.enum(READING_STATUSES).optional(),
-    rating: z.number().int().min(1, "La note doit être comprise entre 1 et 5.").max(5, "La note doit être comprise entre 1 et 5.").optional(),
-    comment: z.string().optional(),
+    rating: z.number().int().min(1, "La note doit être comprise entre 1 et 5.").max(5, "La note doit être comprise entre 1 et 5.").nullable().optional(),
+    comment: z.string().nullable().optional(),
 
-    wishlisted_at: z.string().date(DATE_ERROR).optional(),
-    acquired_at: z.string().date(DATE_ERROR).optional(),
-    started_reading_at: z.string().date(DATE_ERROR).optional(),
-    finished_reading_at: z.string().date(DATE_ERROR).optional(),
+    wishlisted_at: z.string().date(DATE_ERROR).nullable().optional(),
+    acquired_at: z.string().date(DATE_ERROR).nullable().optional(),
+    started_reading_at: z.string().date(DATE_ERROR).nullable().optional(),
+    finished_reading_at: z.string().date(DATE_ERROR).nullable().optional(),
   })
   // Object.keys sur les donnees deja validees : si le body est vide ({}),
   // il n'y a rien a modifier, ca n'a pas de sens d'accepter la requete
