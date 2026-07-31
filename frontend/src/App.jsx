@@ -1,14 +1,16 @@
 // Racine de l'application côté routage.
 // Déclare toutes les routes de l'app ; chaque page réelle sera branchée ici
-// au fur et à mesure des fonctionnalités suivantes (F14 à F15).
+// au fur et à mesure des fonctionnalités suivantes (F15).
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminRoute from "./components/AdminRoute";
 import Layout from "./components/Layout";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./context/AuthContext";
+import AdminDashboard from "./pages/AdminDashboard";
 import BookDetail from "./pages/BookDetail";
 import BookForm from "./pages/BookForm";
 import ForgotPassword from "./pages/ForgotPassword";
+import Landing from "./pages/Landing";
 import Library from "./pages/Library";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -33,7 +35,7 @@ function App() {
     <AuthProvider>
       <Routes>
         {/* routes publiques, accessibles sans connexion */}
-        <Route path="/" element={<PlaceholderPage title="Accueil (F15)" />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -74,7 +76,7 @@ function App() {
             </AdminRoute>
           }
         >
-          <Route path="/admin" element={<PlaceholderPage title="Administration (F14)" />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
 
         {/* route de repli pour toute URL qui ne correspond à rien ci-dessus */}
