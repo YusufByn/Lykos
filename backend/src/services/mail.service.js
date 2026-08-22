@@ -23,7 +23,9 @@ const transporter = nodemailer.createTransport({
 export async function sendPasswordResetEmail(to, resetLink) {
 
   await transporter.sendMail({
-    from: "Lykos <no-reply@lykos.app>",
+    // l'expediteur doit correspondre a une adresse verifiee chez le
+    // fournisseur SMTP, il ne peut donc pas etre code en dur
+    from: env.mail.from,
     to,
     subject: "Réinitialisation de votre mot de passe Lykos",
     // texte simple, suffisant pour un lien de reinitialisation
