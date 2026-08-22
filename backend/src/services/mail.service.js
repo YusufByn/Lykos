@@ -12,11 +12,18 @@ import { env } from "../config/env.js";
 const transporter = nodemailer.createTransport({
   host: env.mail.host,
   port: env.mail.port,
-  secure: false,
+  // le port 465 utilise TLS implicite (connexion chiffree des l'ouverture),
+  // tandis que le port 587 utilise STARTTLS (connexion en clair puis
+  // passage au chiffrement)
+  secure: env.mail.port === 465,
   auth: {
     user: env.mail.user,
     pass: env.mail.password,
   },
+  // evite qu'une requete reste bloquee plusieurs minutes si le serveur
+  // SMTP est injoignable
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
 });
 
 // envoie l'email de reinitialisation de mot de passe avec le lien contenant le token
