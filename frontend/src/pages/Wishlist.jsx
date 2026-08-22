@@ -8,6 +8,7 @@
 // ressemble d'un écran à l'autre.
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import BookCard from "../components/BookCard";
 import { api } from "../services/api";
 
@@ -36,7 +37,16 @@ export default function Wishlist() {
 
   return (
     <div className="p-8">
-      <h1 className="mb-6 text-2xl font-semibold text-[#1B1B1B]">Wishlist</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-[#1B1B1B]">Wishlist</h1>
+
+        <Link
+          to="/livres/nouveau"
+          className="rounded-lg bg-[#174ED8] px-4 py-2 text-sm font-medium text-white"
+        >
+          Ajouter un livre
+        </Link>
+      </div>
 
       {loading && <p className="text-sm text-[#434655]">Chargement...</p>}
 
