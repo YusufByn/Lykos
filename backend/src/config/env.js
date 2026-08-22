@@ -33,5 +33,6 @@ export const env = {
     user: process.env.MAIL_USER,
     password: process.env.MAIL_PASSWORD,
     from: process.env.MAIL_FROM,
+    apiKey: process.env.MAIL_API_KEY,
   },
 };
