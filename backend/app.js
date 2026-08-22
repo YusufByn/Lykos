@@ -4,6 +4,7 @@
 import express from "express";
 import cors from "cors";
 import routes from "./src/routes/index.js";
+import { env } from "./src/config/env.js";
 
 const app = express();
 
@@ -12,8 +13,16 @@ const app = express();
 // Permet de lire le corps des requêtes au format JSON
 app.use(express.json());
 
-// Autorise les requêtes cross-origin depuis le frontend
-app.use(cors());
+// en production, seule l'origine du frontend deploye est autorisee, et les
+// en-tetes Content-Type et Authorization doivent etre declares explicitement
+// pour que les requetes preflight OPTIONS aboutissent
+app.use(
+  cors({
+    origin: env.frontendUrl,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // --- Routes ---
 // Toutes les routes de l'application passent par ce seul point d'entree,
