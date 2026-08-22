@@ -6,6 +6,10 @@ import { env } from "./env.js";
 
 // Crée un pool de connexions réutilisables pour éviter d'ouvrir
 // une nouvelle connexion à chaque requête
+// le serveur MySQL manage (Aiven) impose une connexion chiffree ; quand un
+// certificat est fourni, rejectUnauthorized valide l'identite du serveur
+// contre le certificat de l'autorite fournie, pour se proteger d'une
+// attaque de type man-in-the-middle
 export const pool = mysql.createPool({
   host: env.db.host,
   port: env.db.port,
@@ -13,7 +17,10 @@ export const pool = mysql.createPool({
   password: env.db.password,
   database: env.db.database,
   connectionLimit: 10,
-  dateStrings: ['DATE']
+  dateStrings: ['DATE'],
+  ...(env.db.caCert
+    ? { ssl: { ca: env.db.caCert, rejectUnauthorized: true } }
+    : {}),
 });
 
 // Vérifie que la base de données est joignable.
