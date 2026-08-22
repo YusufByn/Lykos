@@ -4,9 +4,10 @@
 
 import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from "../constants";
 
-// grace au proxy configure dans vite.config.js, /api est redirige
-// vers le backend en developpement
-const API_BASE_URL = "/api";
+// en dev, VITE_API_URL est absente : on retombe sur "/api", redirige vers
+// le backend par le proxy configure dans vite.config.js. En prod, VITE_API_URL
+// pointe vers l'URL complete du backend deploye.
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 // fonction generique utilisee par get/post/patch/delete ci-dessous
 async function request(path, { method = "GET", body, headers = {} } = {}) {
