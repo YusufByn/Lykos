@@ -19,8 +19,11 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="flex h-full flex-col justify-between">
-      <div className="space-y-1">
+    <nav className="flex flex-col gap-4 sm:h-full sm:justify-between">
+      {/* liens en ligne sur mobile (la sidebar est empilée en haut et ne doit
+          pas pousser le contenu trop bas), en colonne a partir de sm: quand
+          la sidebar retrouve sa hauteur pleine a gauche */}
+      <div className="flex flex-wrap gap-2 sm:flex-col sm:gap-0 sm:space-y-1">
         <NavLink to="/bibliotheque" className={linkClassName}>
           Ma bibliothèque
         </NavLink>
@@ -35,7 +38,7 @@ export default function Sidebar() {
             user.role (miroir du role.middleware côté backend) */}
         {user?.role === "admin" && (
           <>
-            <hr className="my-2 border-[#E2E2E2]" />
+            <hr className="my-2 hidden border-[#E2E2E2] sm:block" />
             <NavLink to="/admin" className={linkClassName}>
               Administration
             </NavLink>

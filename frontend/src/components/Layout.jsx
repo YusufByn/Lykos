@@ -8,8 +8,8 @@ import Sidebar from "./Sidebar";
 
 export default function Layout() {
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-64 shrink-0 border-r border-gray-200 bg-white p-4">
+    <div className="flex min-h-screen flex-col sm:flex-row">
+      <aside className="w-full border-r border-gray-200 bg-white p-4 sm:w-64 sm:shrink-0">
         <Sidebar />
       </aside>
 
